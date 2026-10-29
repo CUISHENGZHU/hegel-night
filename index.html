@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d11">
+<meta name="description" content="一场关于辩证法、历史与自由的深夜对话。和黑格尔聊十分钟，把正反合、扬弃、主奴辩证法、理性的狡黠装进脑子。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="与黑格尔夜谈">
+<meta property="og:description" content="深夜书房里的一场对话游戏。用选择、排序和解锁概念卡，把黑格尔讲成人话。">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0d11'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23c9a961' stroke-width='1.4'/%3E%3Ccircle cx='16' cy='14' r='3.4' fill='%23c9a961'/%3E%3C/svg%3E">
+<title>与黑格尔夜谈</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --gold:#c9a961; --gold2:#e6cf94; --dim:#8a7440;
+  --ink:#07080b; --panel:rgba(17,21,27,.92);
+  --text:#e8e0cc; --muted:#8d8778; --line:rgba(201,169,97,.22);
+}
+html,body{height:100%}
+body{
+  background:var(--ink); color:var(--text); overflow:hidden;
+  font-family:"Songti SC","Noto Serif SC","Source Han Serif SC",Georgia,serif;
+  display:flex; justify-content:center;
+}
+#app{position:relative;width:100%;max-width:540px;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.bg{position:absolute;inset:0;background:
+  radial-gradient(120% 60% at 50% 0%,#1d2530 0%,#0d1117 45%,#07080b 80%);}
+.bg:after{content:"";position:absolute;inset:0;opacity:.35;
+  background-image:radial-gradient(circle at 20% 30%,rgba(201,169,97,.06),transparent 40%),
+                   radial-gradient(circle at 80% 70%,rgba(120,150,200,.05),transparent 45%);}
+
+/* ---------- header ---------- */
+header{position:relative;z-index:3;padding:calc(10px + env(safe-area-inset-top)) 18px 8px;display:flex;align-items:center;gap:10px}
+.chip{font-size:11px;letter-spacing:.14em;color:var(--dim);border:1px solid var(--line);border-radius:20px;padding:3px 9px;white-space:nowrap}
+#chapter{font-size:11.5px;letter-spacing:.1em;color:#a89e88;flex:1;text-align:right;transition:opacity .3s}
+.meter{position:relative;z-index:3;margin:0 18px;height:3px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8a7440,var(--gold2));transition:width .8s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 12px rgba(201,169,97,.6)}
+
+/* ---------- stage / portrait ---------- */
+#stage{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:6px 0}
+#portrait{position:relative;width:min(56vh,310px);aspect-ratio:1;transition:opacity .5s,transform .6s,filter .5s;
+  filter:drop-shadow(0 8px 40px rgba(0,0,0,.7));animation:breathe 7s ease-in-out infinite}
+#portrait svg{width:100%;height:100%;display:block}
+body[data-who="you"] #portrait{opacity:.55;transform:scale(.97) translateY(4px);filter:grayscale(.5) drop-shadow(0 8px 30px rgba(0,0,0,.7))}
+body[data-who="narr"] #portrait{opacity:.55;filter:grayscale(.8) drop-shadow(0 8px 30px rgba(0,0,0,.7))}
+@keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.halo{position:absolute;inset:-18%;border-radius:50%;background:radial-gradient(circle,rgba(201,169,97,.13),transparent 62%);pointer-events:none}
+
+/* ---------- dialogue ---------- */
+#dialogue{position:relative;z-index:3;padding:0 14px calc(12px + env(safe-area-inset-bottom));}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px 16px 14px 14px;
+  padding:14px 16px 15px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  box-shadow:0 -10px 40px rgba(0,0,0,.55);position:relative;overflow:hidden}
+.panel:before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(201,169,97,.5),transparent)}
+#echo{font-size:12px;color:#7d7566;font-style:italic;margin-bottom:7px;opacity:0;transition:opacity .5s;line-height:1.5;
+  border-left:2px solid rgba(201,169,97,.25);padding-left:8px}
+#echo.on{opacity:1}
+#nameplate{font-size:12.5px;letter-spacing:.22em;color:var(--gold);margin-bottom:7px;min-height:15px}
+#nameplate.you{color:#7fa8c9}
+#text{font-size:16.5px;line-height:1.82;letter-spacing:.02em;min-height:92px;max-height:34vh;overflow-y:auto;
+  text-shadow:0 1px 0 rgba(0,0,0,.4)}
+#text.narr{color:#b9b1a0;font-style:italic;font-size:15.5px}
+#hint{text-align:right;font-size:12px;color:var(--dim);margin-top:6px;opacity:0;transition:opacity .4s;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:.35}50%{opacity:.85}}
+#choices{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.opt{text-align:left;background:rgba(201,169,97,.05);border:1px solid rgba(201,169,97,.2);color:#ded5be;
+  padding:11px 13px;border-radius:10px;font-family:inherit;font-size:14.5px;line-height:1.55;
+  transition:.22s;display:flex;gap:9px;align-items:flex-start;cursor:pointer}
+.opt span.n{color:var(--dim);font-size:11px;padding-top:3px;min-width:12px}
+.opt:active,.opt:hover{background:rgba(201,169,97,.14);border-color:rgba(201,169,97,.5);transform:translateX(2px)}
+.opt:disabled{opacity:.4}
+
+/* ---------- order puzzle ---------- */
+.slots{display:flex;gap:8px;margin-top:12px}
+.slot{flex:1;height:64px;border:1px dashed rgba(201,169,97,.35);border-radius:10px;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:15px;color:var(--text);
+  cursor:pointer;transition:.25s;background:rgba(255,255,255,.02)}
+.slot b{font-size:10px;color:var(--dim);font-weight:400;letter-spacing:.2em}
+.slot.filled{border-style:solid;border-color:rgba(201,169,97,.7);background:rgba(201,169,97,.12);box-shadow:0 0 18px rgba(201,169,97,.15) inset}
+.slot.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.pool{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.tile{flex:1;min-width:70px;padding:9px 6px;text-align:center;border-radius:9px;font-size:14.5px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#ddd4bd;cursor:pointer;transition:.2s}
+.tile:active{transform:scale(.96)}
+.tile.used{opacity:.25;pointer-events:none}
+.tile small{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+
+/* ---------- hud / drawer ---------- */
+#hud{position:absolute;right:14px;bottom:calc(100% + 0px);z-index:4;display:none}
+#cardBtn{position:relative;z-index:6;background:rgba(20,24,30,.9);flex:0 0 auto;
+  border:1px solid var(--line);color:var(--gold);border-radius:20px;padding:5px 11px;font-size:11.5px;
+  font-family:inherit;letter-spacing:.08em;display:flex;align-items:center;gap:5px;cursor:pointer;backdrop-filter:blur(8px)}
+#cardBtn b{font-size:10px;background:rgba(201,169,97,.18);border-radius:8px;padding:1px 5px;font-weight:400}
+#cardBtn.pulse{animation:pulse .7s}
+@keyframes pulse{0%,100%{transform:scale(1)}40%{transform:scale(1.16);box-shadow:0 0 22px rgba(201,169,97,.5)}}
+#drawer{position:absolute;inset:0;z-index:10;background:rgba(6,7,10,.86);backdrop-filter:blur(14px);
+  transform:translateY(100%);transition:transform .4s cubic-bezier(.2,.85,.2,1);display:flex;flex-direction:column;
+  padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))}
+#drawer.on{transform:translateY(0)}
+.drawer-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.drawer-h h3{font-size:15px;font-weight:400;letter-spacing:.2em;color:var(--gold)}
+.drawer-h button{background:none;border:1px solid var(--line);color:var(--muted);border-radius:20px;
+  padding:4px 12px;font-family:inherit;font-size:12px;cursor:pointer}
+#cards{overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-bottom:10px}
+.card{border:1px solid rgba(201,169,97,.18);border-radius:12px;padding:12px 14px;background:rgba(201,169,97,.04);
+  animation:fade .5s}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card h4{font-size:14.5px;color:var(--gold2);font-weight:400;letter-spacing:.06em;margin-bottom:6px}
+.card h4 em{font-size:11px;color:var(--dim);font-style:normal;margin-left:6px;letter-spacing:.05em}
+.card p{font-size:13.5px;line-height:1.75;color:#cfc7b4}
+.card .eg{margin-top:7px;font-size:12.5px;color:#948c7c;border-left:2px solid rgba(201,169,97,.3);padding-left:9px;line-height:1.7}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:30px 0;line-height:1.9}
+
+/* ---------- overlays ---------- */
+.overlay{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:32px 26px;transition:opacity .7s,visibility .7s}
+.overlay.hide{opacity:0;visibility:hidden}
+#title{background:radial-gradient(70% 50% at 50% 35%,#141a22,#07080b 75%)}
+#title .orn{width:44px;height:1px;background:var(--dim);margin:18px auto}
+#title h1{font-size:34px;font-weight:400;letter-spacing:.12em;color:#efe6cf;text-shadow:0 0 40px rgba(201,169,97,.35)}
+#title h2{font-size:10.5px;letter-spacing:.2em;color:var(--dim);margin-top:14px;font-weight:400;white-space:nowrap}
+#title p{font-size:13px;color:#8d8778;line-height:2;margin-top:26px;max-width:300px}
+#title .sig{margin-top:8px;font-size:11.5px;color:#5f5a4e;letter-spacing:.1em}
+.btn{margin-top:30px;background:linear-gradient(180deg,rgba(201,169,97,.16),rgba(201,169,97,.06));
+  border:1px solid rgba(201,169,97,.55);color:var(--gold2);font-family:inherit;font-size:15px;
+  letter-spacing:.3em;padding:13px 42px;border-radius:4px;cursor:pointer;transition:.3s}
+.btn:active{transform:scale(.97);background:rgba(201,169,97,.25)}
+#endScreen{background:radial-gradient(70% 50% at 50% 30%,#1a1610,#07080b 78%);overflow-y:auto;justify-content:flex-start;padding-top:calc(40px + env(safe-area-inset-top))}
+#endScreen h2{font-size:24px;font-weight:400;letter-spacing:.14em;color:var(--gold2);margin-bottom:6px}
+#endScreen .rank{font-size:12px;letter-spacing:.24em;color:var(--dim);margin-bottom:22px}
+#endScreen .body{font-size:14.5px;line-height:2.1;color:#d3cab6;max-width:340px;text-align:left}
+#endScreen .score{font-size:12px;color:var(--muted);letter-spacing:.1em;margin:22px 0 6px}
+#endScreen .cards-mini{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px;max-width:340px}
+.cm{font-size:11.5px;border:1px solid rgba(201,169,97,.25);color:#b8ae97;border-radius:20px;padding:3px 10px}
+#endScreen .btn{margin-top:26px;font-size:13px;padding:11px 28px;letter-spacing:.2em}
+#endScreen .fine{font-size:10.5px;color:#4f4b42;margin-top:22px;line-height:1.8;max-width:320px}
+</style>
+</head>
+<body data-who="narr">
+<div id="app">
+  <div class="bg"></div>
+
+  <header>
+    <div class="chip">柏林 · 1831</div>
+    <div id="chapter">序</div>
+    <button id="cardBtn">概念 <b id="cardCount">0</b></button>
+  </header>
+  <div class="meter"><i id="bar"></i></div>
+
+  <div id="stage">
+    <div id="portrait"><div class="halo"></div>
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="face" cx="45%" cy="35%" r="75%">
+            <stop offset="0%" stop-color="#39424e"/><stop offset="100%" stop-color="#1b2029"/>
+          </radialGradient>
+          <radialGradient id="ring" cx="50%" cy="40%" r="60%">
+            <stop offset="70%" stop-color="rgba(201,169,97,0)"/><stop offset="100%" stop-color="rgba(201,169,97,.10)"/>
+          </radialGradient>
+        </defs>
+        <circle cx="100" cy="100" r="94" fill="url(#ring)" stroke="rgba(201,169,97,.35)" stroke-width="0.8"/>
+        <circle cx="100" cy="100" r="86" fill="none" stroke="rgba(201,169,97,.14)" stroke-width="0.6" stroke-dasharray="1 6"/>
+        <!-- coat / shoulders -->
+        <path d="M34 196 C38 156 60 140 80 132 L120 132 C140 140 162 156 166 196 Z" fill="#141920" stroke="#6d5c34" stroke-width="1.1"/>
+        <!-- collar -->
+        <path d="M80 132 L100 162 L120 132 L112 128 L100 148 L88 128 Z" fill="#0f1319" stroke="#8a7440" stroke-width="1"/>
+        <path d="M100 162 L100 196" stroke="#6d5c34" stroke-width="0.9"/>
+        <!-- neck -->
+        <path d="M88 108 L88 138 Q100 147 112 138 L112 108 Z" fill="#161b22" stroke="#6d5c34" stroke-width="0.9"/>
+        <!-- head -->
+        <path d="M77 82 C77 56 87 42 100 42 C113 42 123 56 123 82 C123 105 114 122 100 127 C86 122 77 105 77 82 Z" fill="url(#face)" stroke="#c9a961" stroke-width="1.2"/>
+        <!-- hair -->
+        <path d="M77 72 C73 48 83 32 100 32 C118 32 128 48 124 72 C122 58 113 47 100 47 C87 47 78 58 77 72 Z" fill="#242b35"/>
+        <path d="M84 41 Q95 36 106 39" fill="none" stroke="rgba(201,169,97,.45)" stroke-width="1"/>
+        <path d="M120 48 Q126 56 126 66" fill="none" stroke="rgba(201,169,97,.3)" stroke-width="0.8"/>
+        <!-- brows -->
+        <path d="M81 79.5 Q88 74 95 77.5" fill="none" stroke="#c9a961" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M105 77.5 Q112 74 119 79.5" fill="none" stroke="#c9a961" stroke-width="2.2" stroke-linecap="round"/>
+        <!-- eyes -->
+        <ellipse cx="88" cy="87.4" rx="2.5" ry="1.6" fill="#050709"/>
+        <ellipse cx="112" cy="87.4" rx="2.5" ry="1.6" fill="#050709"/>
+        <path d="M83 85.4 Q88 82.6 93 85.4" fill="none" stroke="#c9a961" stroke-width="0.9"/>
+        <path d="M107 85.4 Q112 82.6 117 85.4" fill="none" stroke="#c9a961" stroke-width="0.9"/>
+        <!-- nose + mouth -->
+        <path d="M86 62 Q100 58 114 62" fill="none" stroke="rgba(201,169,97,.35)" stroke-width="0.7"/>
+        <path d="M85 104 Q89 111 93 112" fill="none" stroke="rgba(201,169,97,.28)" stroke-width="0.7"/>
+        <path d="M115 104 Q111 111 107 112" fill="none" stroke="rgba(201,169,97,.28)" stroke-width="0.7"/>
+        <path d="M100 88 L100 101 Q96 105 92 103" fill="none" stroke="#8a7440" stroke-width="1.1" stroke-linecap="round"/>
+        <path d="M92 113.6 Q100 112.6 108 114.4" fill="none" stroke="#b39757" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M97 109 Q100 108.4 103 109.4" fill="none" stroke="rgba(179,151,87,.4)" stroke-width="0.8"/>
+        <!-- jaw shading -->
+        <path d="M76 96 Q80 116 100 122" fill="none" stroke="rgba(201,169,97,.28)" stroke-width="0.9"/>
+        <path d="M124 96 Q120 116 100 122" fill="none" stroke="rgba(201,169,97,.28)" stroke-width="0.9"/>
+        <path d="M78 92 Q80 106 87 113" fill="none" stroke="rgba(201,169,97,.3)" stroke-width="0.8"/>
+        <path d="M122 92 Q120 106 113 113" fill="none" stroke="rgba(201,169,97,.3)" stroke-width="0.8"/>
+        <path d="M77 76 Q75 88 79 96 L83 93 Q79 85 80 76 Z" fill="#252b34" stroke="rgba(201,169,97,.5)" stroke-width="0.7"/>
+        <path d="M123 76 Q125 88 121 96 L117 93 Q121 85 120 76 Z" fill="#252b34" stroke="rgba(201,169,97,.5)" stroke-width="0.7"/>
+        <!-- quill -->
+        <path d="M150 178 C158 160 164 140 160 118" fill="none" stroke="#8a7440" stroke-width="1.1"/>
+        <path d="M160 118 C152 126 150 140 152 152 C158 142 161 130 160 118 Z" fill="rgba(201,169,97,.22)" stroke="#8a7440" stroke-width="0.7"/>
+      </svg>
+    </div>
+  </div>
+
+  <div id="dialogue">
+    <div class="panel">
+      <div id="echo"></div>
+      <div id="nameplate"></div>
+      <div id="text"></div>
+      <div id="choices"></div>
+      <div id="hint">▸ 轻触继续</div>
+    </div>
+  </div>
+
+    <div id="drawer">
+    <div class="drawer-h"><h3>概念卡</h3><button id="closeDrawer">合上</button></div>
+    <div id="cards"></div>
+  </div>
+
+  <div class="overlay" id="title">
+    <h1>与黑格尔夜谈</h1>
+    <div class="orn"></div>
+    <h2>一 场 关 于 辩 证 法 · 历 史 · 自 由 的 深 夜 对 话</h2>
+    <p>1831 年的柏林，凌晨三点。<br>你推开一间书房的门。<br>桌上蜡烛快烧尽了。</p>
+    <button class="btn" id="startBtn">叩 门</button>
+    <div class="sig" style="margin-top:26px">约 10 分钟 · 可重玩 · 小心矛盾</div>
+  </div>
+
+  <div class="overlay hide" id="endScreen">
+    <h2 id="endTitle"></h2>
+    <div class="rank" id="endRank"></div>
+    <div class="body" id="endBody"></div>
+    <div class="score" id="endScore"></div>
+    <div class="cards-mini" id="endCards"></div>
+    <button class="btn" id="againBtn">再 谈 一 次</button>
+    <div class="fine">本作是对黑格尔思想的通俗演绎，为便于理解做了简化与戏剧化处理，不等同于原著论证。</div>
+  </div>
+</div>
+<script>
+/* ================= 概念卡 ================= */
+const CARDS = {
+  bianzheng: {t:'辩证法', en:'Dialektik', p:'不是「吵架术」，而是事物自己待不住：任何规定一旦被说清楚，就暴露出它依赖的反面，于是被迫往前走一步。', eg:'你说「我就是自由的」——立刻要问：谁在限制你？没有限制，「自由」这个词就没有内容。'},
+  zhengfanhe: {t:'正—反—合', en:'These / Antithese / Synthese', p:'它不是一个三步流程，而是一个动作的三个瞬间：立场出现、自我否定、在更高层面把两边都保留下来。第三个不是折中，是升级。', eg:'有 → 无 → 变。前两个各自空掉，第三个才第一次「言之有物」。'},
+  maodun: {t:'矛盾', en:'Widerspruch', p:'在黑格尔那儿矛盾不是错误，而是动力。凡有限的东西都含着自我拆解的种子，正是这颗种子推着它变成别的东西。', eg:'一枝花开放的同时就在凋谢——同一件事，两个方向。'},
+  yangqi: {t:'扬弃', en:'Aufhebung', p:'一个词同时干三件事：否定、保存、提高。旧形态被取消了，但它的真理没有被丢掉，而是被抬到更高一层。', eg:'学会骑车后你不再需要「想着平衡」（否定），但平衡感留下了（保存），你能骑得更远（提高）。'},
+  chengren: {t:'承认', en:'Anerkennung', p:'自我意识不能独自成立。我要确认「我是谁」，必须有一个同样自由的存在看着我、承认我。自由因此不是独角戏。', eg:'一个人对着镜子练一百遍演讲，也不如在台下有一个人真正听懂。'},
+  zhunu: {t:'主奴辩证法', en:'Herrschaft und Knechtschaft', p:'主人用生命冒险赢得统治，却从此依赖奴隶的承认；奴隶在劳动中把世界改造成自己的作品，在作品里认出了自己。历史的主动权在这里悄悄调头。', eg:'雇主离了员工什么也造不出；而员工带走的技艺，谁也拿不走。'},
+  jiaoxia: {t:'理性的狡黠', en:'List der Vernunft', p:'历史不靠善意推动。人们追逐私利、激情与荣耀，理性躲在背后，借这些激情实现自己更大的目的。', eg:'无数人为赚钱修铁路，最后改变的是整个时代的时间感。'},
+  juedui: {t:'绝对精神', en:'absoluter Geist', p:'不是「全知全能的上帝」，而是精神彻底认识了自己：我就是世界得以被理解的那个结构。它走三段路：艺术（形象）、宗教（表象）、哲学（概念）。', eg:'同一份悲伤，可以是首歌、一次祈祷，也可以是一句被说准的话。'},
+  maozi: {t:'密涅瓦的猫头鹰', en:'Eule der Minerva', p:'智慧女神头上的猫头鹰黄昏才起飞。哲学总是来得太晚，它只能理解已经发生的事，不能预言未来。清醒是一种迟到。', eg:'你总是先经历完一段关系，才终于明白它是什么。'},
+  shijie: {t:'世界精神', en:'Weltgeist', p:'历史不是一堆偶然事件，而是一个主体在时间里认识自己的过程。某个时代的精神，会挑中某个人做它的坐骑。', eg:'一个时代的口头禅，往往暴露了它正在解决的难题。'},
+  ziyou: {t:'自由', en:'Freiheit', p:'自由不是「没人管我」，而是「在他者中认出自己」。当我理解了我所受的限制从何而来，限制就不再是外来的枷锁。', eg:'懂了交通规则为什么存在，红灯就不再是冒犯，而是共同生活的语法。'}
+};
+
+/* ================= 剧本 ================= */
+const NODES = {
+
+/* ---------- 序 ---------- */
+door: {ch:'序 · 门', who:'narr', text:'一八三一年，柏林，凌晨三点。\n你推开一间书房的门。桌上那支蜡烛快烧尽了，一个穿旧式外套的老人正在纸上写字，笔尖沙沙响。他没有抬头。', next:'hi1'},
+hi1: {who:'hegel', text:'坐。我这儿不卖智慧，只批发矛盾。', choices:[
+  {t:'我想弄懂辩证法，别绕弯子。', next:'a_direct', insight:5},
+  {t:'实话实说，您的书我读了三页就睡着了。', next:'a_honest', insight:6},
+  {t:'先聊聊您和谢林那点旧账？', next:'a_gossip', insight:2}
+]},
+a_direct: {who:'hegel', text:'痛快。那我就给你看一样小东西——它只有三个字，却转得动整个世界。', next:'p1_intro'},
+a_honest: {who:'hegel', text:'正常。我的书是写给那些已经被现实撞疼过的人读的。读了第三页就睡着，说明你还疼得不够，或者你太诚实。两者我都喜欢。', next:'p1_intro'},
+a_gossip: {who:'hegel', text:'那是历史学家的事。我这里只谈精神——精神连吵架都比八卦有条理。', next:'p1_intro'},
+
+/* ---------- 一 · 有 / 无 / 变 ---------- */
+p1_intro: {ch:'一 · 有与无', who:'hegel', text:'看桌上。三张卡片：有、无、变。\n把它们按「正—反—合」的顺序摆好。摆错了我不骂你，只会让你再摆一次。', type:'order',
+  slots:['正','反','合'],
+  tiles:[{id:'you',label:'有',sub:'Being'},{id:'wu',label:'无',sub:'Nothing'},{id:'bian',label:'变',sub:'Becoming'}],
+  solution:['you','wu','bian'], ok:'p1_ok',
+  fail:'错了不要紧，但要错得明白。想想：第一个最空洞的东西，会自己滑向哪里？'},
+
+p1_ok: {who:'hegel', text:'对。\n纯有——只说「有」，什么也没说，空得像一句话没说出口。可一个彻底空的东西，就是无。\n两个都站不住，于是它们一起塌进第三样东西：变。这就是辩证法最小的一次心跳。', card:'zhengfanhe', next:'p1_q'},
+p1_q: {who:'hegel', text:'但别急着背下来。记住一件事：辩证不是说话技巧，是事物自己待不住。\n任何东西，一旦被说清楚，就露出它靠着什么才成立。', choices:[
+  {t:'所以矛盾不是错误，是动力？', next:'p1_r1', insight:6, card:'maodun'},
+  {t:'听起来还是像抬杠。', next:'p1_r2', insight:2},
+  {t:'那有没有什么东西能停下来？', next:'p1_r3', insight:4}
+]},
+p1_r1: {who:'hegel', text:'正是。庸人怕矛盾，以为它是思维的污点。可你想想一枝花——它开放的同时就在凋谢。同一件事，两个方向。生命靠这个「同时」活着。', next:'c2'},
+p1_r2: {who:'hegel', text:'抬杠只需要嘴，辩证需要让对方的立场自己走到底。你试试把那句话推到极限，看它会不会翻面。翻不了，才叫抬杠。', next:'c2'},
+p1_r3: {who:'hegel', text:'有。但那不叫「停下」，叫「回到自己」——像一个圆走完一圈，终点就是起点，只是它现在知道自己走过了什么。整个哲学，就是这条圆的注解。', next:'c2'},
+
+/* ---------- 二 · 扬弃 ---------- */
+c2: {ch:'二 · 扬弃', who:'hegel', text:'你会很快遇到一个讨厌的词：扬弃（Aufhebung）。\n德语里它同时意味着三件事：取消、保存、抬升。这不是我玩文字游戏，是现实本来就这么干。\n来，考你一下。', choices:[
+  {t:'扬弃 = 把旧东西彻底扔掉', next:'c2_a', insight:1},
+  {t:'扬弃 = 原样保留，别乱动', next:'c2_b', insight:1},
+  {t:'扬弃 = 否定它，同时保住它的真理，再抬到更高一层', next:'c2_c', insight:9, card:'yangqi'}
+]},
+c2_a: {who:'hegel', text:'那你就只是换了个新的，然后一切照旧。彻底扔掉等于没发生过——被丢掉的东西会在别处以症状的形式回来。', next:'c2_ok'},
+c2_b: {who:'hegel', text:'那是收藏，不是思想。把童年原封不动供起来的人，其实一直没有长大。', next:'c2_ok'},
+c2_c: {who:'hegel', text:'你抓到了。否定、保存、提高，三件事一次做完。', card:'yangqi', next:'c2_ok'},
+c2_ok: {who:'hegel', text:'扬弃不是把旧东西擦掉，是让它在新的形态里继续活着。\n你学骑车时摔过跤——摔倒被否定了，但平衡感被保存了下来，而且你能骑得更远。这就是一次标准的扬弃。', next:'c3_intro'},
+
+/* ---------- 三 · 主奴 ---------- */
+c3_intro: {ch:'三 · 承认', who:'narr', text:'书房忽然消失。你站在一片空旷的海滩上。\n两个模糊的人影面对面站着：一个手里握着刀，一个在发抖。他们都盯着对方，眼睛里是同一种东西——想要被看见。', next:'c3_ask'},
+c3_ask: {who:'hegel', text:'两个自我意识相遇了。他们都想要同一件东西：被对方承认。\n你说，接下来会发生什么？', choices:[
+  {t:'决斗到死，赢的那个当主人。', next:'c3_duel', insight:3},
+  {t:'一个屈服，成了奴隶。', next:'c3_slave', insight:9, card:'zhunu'},
+  {t:'他们应该互相承认。', next:'c3_mutual', insight:6}
+]},
+c3_duel: {who:'hegel', text:'死斗能赢来恐惧，赢不来承认。死人不会承认你，而赌上性命的那个人也未必还活着。\n所以真正的结果往往不是死，是一方先怕了——他选择活着，代价是当奴隶。', next:'c3_ok'},
+c3_slave: {who:'hegel', text:'于是有了主人和奴隶。\n但注意这里的方向：主人从此依赖奴隶的承认——他的「主人」身份要靠奴隶点头才成立。\n而奴隶在劳动里，把世界改造成自己的作品。他在自己做的桌子、磨的刀、种的粮食里，认出了自己。\n历史的方向，在这里偷偷掉了个头。', card:'zhunu', next:'c3_ok'},
+c3_mutual: {who:'hegel', text:'对，但那是终点，不是起点。\n互相承认是历史要走完的全程，不是一句话就能签的合同。奴隶先要意识到自己也是主体，主人才可能失去他的位置。', next:'c3_ok'},
+c3_ok: {who:'hegel', text:'所以自由不是「没人管我」。自由是——我在他者中认出了自己。\n被承认的人才是自由的；而这个「承认」，要靠斗争、劳动，和漫长的历史去挣。', card:'chengren', next:'c4_intro'},
+
+/* ---------- 四 · 理性的狡黠 ---------- */
+c4_intro: {ch:'四 · 理性的狡黠', who:'narr', text:'窗外传来马蹄声。黑格尔走到窗边，掀开一角窗帘。\n远处有人举着火把经过，盔甲反着光。', next:'c4_1'},
+c4_1: {who:'hegel', text:'一八〇六年，耶拿。我亲眼看见拿破仑骑马穿过街道。\n那天我在手稿边上写下：我看见「马背上的世界精神」。', card:'shijie', next:'c4_q'},
+c4_q: {who:'hegel', text:'一个征服者，烧了别人的城，怎么会是「世界精神」？', choices:[
+  {t:'因为他打赢了，历史站在强者一边。', next:'c4_a', insight:2},
+  {t:'因为他在无意中，替时代完成了时代要做的事。', next:'c4_b', insight:9, card:'jiaoxia'},
+  {t:'因为他是天才，天才就是历史本身。', next:'c4_c', insight:3}
+]},
+c4_a: {who:'hegel', text:'不。历史不奖励赢家，历史利用他们。赢的人常常只是被用得比较彻底的那个。', next:'c4_ok'},
+c4_b: {who:'hegel', text:'对。这就是理性的狡黠（List der Vernunft）。\n人们追逐私利、激情、荣耀，以为自己在主导；理性躲在背后，借这些激情实现一个更大的目的。\n拿破仑想的是帝国和荣耀，他实际干的是把法国大革命的成果用剑钉进整个欧洲。', card:'jiaoxia', next:'c4_ok'},
+c4_c: {who:'hegel', text:'天才只是火药，不是火药库。没有那个时代积起来的压力，再大的天才也只是个怪人。', next:'c4_ok'},
+c4_ok: {who:'hegel', text:'于是历史看起来像一场混乱的私欲展览，底下却有一条在收紧的线。\n别急着把它读成「一切都是好的」——死的人是真死的。理性狡黠只保证一件事：事情会往前走，而且通常踩着你。', next:'c5_intro'},
+
+/* ---------- 五 · 绝对精神 ---------- */
+c5_intro: {ch:'五 · 绝对精神', who:'hegel', text:'最后一级台阶。\n精神要认识自己，走过三条路：艺术、宗教、哲学。\n把它们从「最依赖感官」到「最依赖概念」排好。', type:'order',
+  slots:['感性','居中','概念'],
+  tiles:[{id:'art',label:'艺术',sub:'形象'},{id:'rel',label:'宗教',sub:'表象'},{id:'phi',label:'哲学',sub:'概念'}],
+  solution:['art','rel','phi'], ok:'c5_ok',
+  fail:'再想想。哪一种最需要你亲眼看、亲手摸？哪一种已经只剩思想本身？'},
+
+c5_ok: {who:'hegel', text:'对。\n艺术给你一座神庙、一出悲剧——真理以感性的形状站在你面前。\n宗教再往内一步：真理变成表象，你「信」它。\n哲学最后一步：把一切形象翻译成概念。不是变得更冷，而是变得更彻底——它要的是理解，不是感动。', card:'juedui', next:'c5_2'},
+c5_2: {who:'hegel', text:'有人因此说我冷酷，说我把宗教变成了逻辑。\n可你想想：一幅画让你流泪，你说不清为什么；一句话说准了你的处境，你却整个人安静下来。哪个更接近真相？', choices:[
+  {t:'画。感动才是真的，概念只是冷的骨架。', next:'c5_a', insight:4},
+  {t:'那句话。因为它让你明白自己站在哪里。', next:'c5_b', insight:8, card:'ziyou'},
+  {t:'两个都要，缺一个都不算懂。', next:'c5_c', insight:7}
+]},
+c5_a: {who:'hegel', text:'感动的确是真的，但它抓不住自己。艺术会疲倦，形式会用完——所以伟大的艺术时代总有结束的一天。它把火递给了下一个。', next:'c6_intro'},
+c5_b: {who:'hegel', text:'对。概念不是把火浇灭，是把火装进灯里。\n从此你走到哪里，都带着光——而不是等着别人再点一次。', card:'ziyou', next:'c6_intro'},
+c5_c: {who:'hegel', text:'狡猾，但正确。这三个阶段不是互相取代，是层层包含：哲学里还活着艺术和宗教，只是它们不再各说各话。', next:'c6_intro'},
+
+/* ---------- 六 · 结尾 ---------- */
+c6_intro: {ch:'六 · 猫头鹰', who:'hegel', text:'天快亮了。你听——', next:'c6_owl'},
+c6_owl: {who:'narr', text:'窗外，一只猫头鹰低低掠过屋顶，翅膀擦过瓦片。\n蜡烛只剩最后一截。', next:'c6_2'},
+c6_2: {who:'hegel', text:'密涅瓦的猫头鹰，黄昏才起飞。\n哲学总是来得太晚。它只能理解已经发生的事，没法替你预言明天。\n所以别指望我给你一个未来——我只能让你看清，你此刻已经站在哪儿。', card:'maozi', choices:[
+  {t:'那理解到底有什么用？', next:'c6_a', insight:7},
+  {t:'那我现在该干什么？', next:'c6_b', insight:7},
+  {t:'所以您其实什么也没告诉我。', next:'c6_c', insight:3}
+]},
+c6_a: {who:'hegel', text:'理解不改变世界，它改变你。\n而世界，正好是由你这样的人组成的。\n这不是安慰，是唯一可靠的那条路：先看清，才谈得上自由。', card:'ziyou', next:'end'},
+c6_b: {who:'hegel', text:'走出去，去做那些将来值得被理解的事。\n我在这里等你回来——带着新的矛盾。', next:'end'},
+c6_c: {who:'hegel', text:'我告诉了你一件很难的事：你没法跳到历史外面去看历史。\n但你至少知道了自己站在圆上的哪一点。这已经比大多数人走得远。', next:'end'},
+
+end: {type:'end'}
+};
+/* ================= 引擎 ================= */
+const MAX = 54;
+const S = {insight:0, cards:new Set(['bianzheng']), done:false};
+const $ = s => document.querySelector(s);
+const CN = ['一','二','三','四'];
+let cur = null, timer = null, pendingNext = null, busyTyping = false;
+
+/* ---- 打字机 ---- */
+function typeText(el, text, speed, done){
+  clearInterval(timer);
+  busyTyping = true;
+  el.textContent = '';
+  let i = 0;
+  timer = setInterval(() => {
+    el.textContent = text.slice(0, ++i);
+    if(i >= text.length){ clearInterval(timer); busyTyping = false; done && done(); }
+  }, speed || 20);
+  el.dataset.full = text;
+}
+function finishTyping(){
+  if(!busyTyping) return false;
+  clearInterval(timer);
+  $('#text').textContent = $('#text').dataset.full || '';
+  busyTyping = false;
+  afterTyping();
+  return true;
+}
+
+/* ---- 概念卡 ---- */
+function unlock(id){
+  if(!id || S.cards.has(id)) return;
+  S.cards.add(id);
+  $('#cardCount').textContent = S.cards.size;
+  const b = $('#cardBtn');
+  b.classList.remove('pulse'); void b.offsetWidth; b.classList.add('pulse');
+  renderCards();
+}
+function renderCards(){
+  const box = $('#cards');
+  if(!S.cards.size){ box.innerHTML = '<div class="empty">还没有任何概念卡。<br>和他聊聊，它们会自己出现。</div>'; return; }
+  box.innerHTML = '';
+  S.cards.forEach(id => {
+    const c = CARDS[id]; if(!c) return;
+    const d = document.createElement('div');
+    d.className = 'card';
+    d.innerHTML = '<h4>' + c.t + '<em>' + (c.en || '') + '</em></h4>' +
+                  '<p>' + c.p + '</p>' + (c.eg ? '<div class="eg">' + c.eg + '</div>' : '');
+    box.appendChild(d);
+  });
+}
+
+/* ---- 进度条 ---- */
+function updateBar(){
+  $('#bar').style.width = Math.min(100, S.insight / MAX * 100) + '%';
+}
+
+/* ---- 节点渲染 ---- */
+let afterTyping = () => {};
+
+function go(id){
+  if(id === 'end'){ endGame(); return; }
+  const n = NODES[id];
+  if(!n){ console.warn('missing node', id); return; }
+  cur = n;
+  $('#hint').style.opacity = 0;
+  if(n.ch) $('#chapter').textContent = n.ch;
+  if(n.card) unlock(n.card);
+  if(n.insight){ S.insight += n.insight; updateBar(); }
+
+  const who = n.who || 'hegel';
+  document.body.dataset.who = who;
+  const np = $('#nameplate');
+  np.textContent = who === 'hegel' ? '黑格尔' : (who === 'you' ? '你' : '');
+  np.className = who === 'you' ? 'you' : '';
+  const tx = $('#text');
+  tx.className = who === 'narr' ? 'narr' : '';
+  $('#choices').innerHTML = '';
+  pendingNext = n.next || null;
+
+  if(n.type === 'end'){ endGame(); return; }
+
+  afterTyping = () => {
+    if(n.choices) renderChoices(n.choices);
+    else if(n.type === 'order') renderOrder(n);
+    else if(n.next) $('#hint').style.opacity = 1;
+  };
+  typeText(tx, n.text, who === 'narr' ? 24 : 19, afterTyping);
+}
+
+function renderChoices(list){
+  const box = $('#choices');
+  box.innerHTML = '';
+  list.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.innerHTML = '<span class="n">' + CN[i] + '</span><span>' + c.t + '</span>';
+    b.onclick = (e) => {
+      e.stopPropagation();
+      box.innerHTML = '';
+      $('#hint').style.opacity = 0;
+      if(c.card) unlock(c.card);
+      const e2 = $('#echo');
+      e2.textContent = '你说：' + c.t;
+      e2.classList.add('on');
+      if(c.insight){ S.insight += c.insight; updateBar(); }
+      go(c.next);
+    };
+    box.appendChild(b);
+  });
+}
+
+/* ---- 排序谜题 ---- */
+function renderOrder(n){
+  const box = $('#choices');
+  box.innerHTML = '';
+  $('#hint').style.opacity = 0;
+  let filled = [null, null, null];
+
+  const slots = document.createElement('div');
+  slots.className = 'slots';
+  const pool = document.createElement('div');
+  pool.className = 'pool';
+
+  const tileMap = {};
+  function draw(){
+    slots.innerHTML = '';
+    filled.forEach((v, i) => {
+      const s = document.createElement('div');
+      s.className = 'slot' + (v ? ' filled' : '');
+      const item = v ? n.tiles.find(t => t.id === v) : null;
+      s.innerHTML = '<b>' + n.slots[i] + '</b>' + (item ? '<span>' + item.label + '</span>' : '<span style="color:#5c574d;font-size:12px">待放</span>');
+      s.onclick = (e) => {
+        e.stopPropagation();
+        if(!filled[i]) return;
+        tileMap[filled[i]].classList.remove('used');
+        filled[i] = null; draw();
+      };
+      slots.appendChild(s);
+    });
+    n.tiles.forEach(t => {
+      if(!tileMap[t.id]){
+        const d = document.createElement('div');
+        d.className = 'tile';
+        d.innerHTML = t.label + '<small>' + (t.sub || '') + '</small>';
+        d.onclick = (e) => {
+          e.stopPropagation();
+          const idx = filled.indexOf(null);
+          if(idx < 0) return;
+          filled[idx] = t.id; d.classList.add('used'); draw();
+          if(filled.every(x => x)) setTimeout(() => check(), 280);
+        };
+        tileMap[t.id] = d;
+      }
+      pool.appendChild(tileMap[t.id]);
+    });
+  }
+  function check(){
+    const ok = filled.every((v, i) => v === n.solution[i]);
+    if(ok){
+      slots.querySelectorAll('.slot').forEach(s => s.style.borderColor = 'rgba(230,207,148,.95)');
+      setTimeout(() => { if(n.card) unlock(n.card); go(n.ok); }, 520);
+    } else {
+      slots.querySelectorAll('.slot').forEach(s => { s.classList.add('shake'); });
+      const e2 = $('#echo');
+      e2.textContent = '黑格尔：' + n.fail;
+      e2.classList.add('on');
+      setTimeout(() => {
+        filled = [null, null, null];
+        n.tiles.forEach(t => tileMap[t.id].classList.remove('used'));
+        draw();
+      }, 1500);
+    }
+  }
+  draw();
+  box.appendChild(slots);
+  box.appendChild(pool);
+}
+
+/* ---- 结局 ---- */
+function endGame(){
+  S.done = true;
+  const pct = S.insight / MAX;
+  let rank, title, body;
+  if(pct >= .78){
+    title = '辩证的同行者';
+    body = '你走的时候，天已经亮了。\n\n你带走的不是一堆术语，而是一个动词——扬弃。你知道任何东西都有它撑不住的地方，而那正是它要往前走的地方。\n\n你也不再要求黑格尔给你答案。你明白了他能给的最好的东西，是让你看清自己站在圆上的哪一点：来处可辨，去处未定。\n\n「下次来，」他在你身后说，「带点新的矛盾。」';
+  } else if(pct >= .5){
+    title = '门口的学徒';
+    body = '你听懂了大半，也放过了一些。\n\n你知道正—反—合不是三步走，知道扬弃里藏着「保存」；但你还没完全习惯那种看法——凡是现成的东西，都要问一句：它靠什么才成立？\n\n黑格尔吹熄了蜡烛。「回去之后，别急着用这些词。先去用它们看你自己的生活。词是别人的，看法得是你自己的。」';
+  } else {
+    title = '深夜的访客';
+    body = '你来得晚，走得也早。\n\n不过你至少记住了那只猫头鹰：智慧黄昏才起飞，理解总是迟到一步。\n\n「这不算失败，」黑格尔在门口说，「大多数人一辈子都没进过这间屋子。下次来，我们从头开始——从『有』这个字开始，它比你想的空得多。」';
+  }
+  let rank2 = '理解度 ' + Math.round(pct * 100) + '%　·　概念卡 ' + S.cards.size + '/' + Object.keys(CARDS).length;
+  $('#endTitle').textContent = title;
+  $('#endRank').textContent = rank2;
+  $('#endBody').innerHTML = body.replace(/\n/g, '<br>');
+  $('#endScore').textContent = '—— 本次夜谈收获 ——';
+  const cm = $('#endCards');
+  cm.innerHTML = '';
+  S.cards.forEach(id => {
+    const d = document.createElement('span');
+    d.className = 'cm'; d.textContent = CARDS[id].t;
+    cm.appendChild(d);
+  });
+  $('#endScreen').classList.remove('hide');
+  $('#endScreen').scrollTop = 0;
+}
+
+/* ---- 交互 ---- */
+$('#dialogue').addEventListener('click', (e) => {
+  if(e.target.closest('.opt,.slot,.tile')) return;
+  if(finishTyping()) return;
+  if(pendingNext){ const n = pendingNext; pendingNext = null; $('#hint').style.opacity = 0; go(n); }
+});
+
+$('#startBtn').onclick = () => {
+  $('#title').classList.add('hide');
+  $('#cardCount').textContent = S.cards.size;
+  renderCards(); updateBar();
+  setTimeout(() => go('door'), 380);
+};
+
+$('#cardBtn').onclick = (e) => { e.stopPropagation(); $('#drawer').classList.add('on'); };
+$('#closeDrawer').onclick = () => $('#drawer').classList.remove('on');
+
+$('#againBtn').onclick = () => {
+  S.insight = 0; S.cards = new Set(['bianzheng']); S.done = false;
+  $('#echo').classList.remove('on'); $('#echo').textContent = '';
+  $('#cardCount').textContent = S.cards.size;
+  renderCards(); updateBar();
+  $('#endScreen').classList.add('hide');
+  $('#chapter').textContent = '序';
+  go('door');
+};
+
+renderCards();
+
+</script>
+</body>
+</html>
